@@ -6,22 +6,26 @@
 
 #include <random>
 
-using namespace std;
 
-int main()
+int main (int argc, char **argv)
 {
-    //    Settings s;
+    Settings::readFromFile ("settings");
+    if (!Settings::valid ())
+    {
+        std::cout << "Settings file read error" << std::endl;
+        return -1;
+    }
 
-//    auto test = Tape::makeTape (10000, "TestInput");
-//    for (auto i = 0; i < 10000; i++)
+//    auto test = Tape::makeTape (100, "TestInput");
+//    for (auto i = 0; i < 100; i++)
 //    {
 //        test->write (std::rand () % 10000);
 //        test->moveForward();
 //    }
+//    return 0;
 
     std::vector <unsigned int> mem;
-    //    mem.resize (s.N () / 4);
-    mem.resize (1000);
+    mem.resize (Settings::N () / 4);
 
     std::string inTapeName, outTapeName;
 

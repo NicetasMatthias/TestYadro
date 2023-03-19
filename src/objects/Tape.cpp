@@ -3,7 +3,6 @@
 
 #include <chrono>
 #include <thread>
-#include <iostream>//--убрать
 #include <iomanip>
 //-- максимальное число, которое может быть записано это UINT_MAX = 4 294 967 295
 //-- для простоты навигации по файлу числа будут записываться с ведущими нулями
@@ -52,7 +51,7 @@ ITape::ErrorCode Tape::moveForward ()
     }
     else
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1/*Settings::moveDelay()*/));
+        std::this_thread::sleep_for(std::chrono::milliseconds(Settings::moveDelay()));
         return Tape::Success;
     }
 }
@@ -67,7 +66,7 @@ ITape::ErrorCode Tape::moveBack ()
     }
     else
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1/*Settings::moveDelay()*/));
+        std::this_thread::sleep_for(std::chrono::milliseconds(Settings::moveDelay()));
         return Tape::Success;
     }
 }
@@ -75,14 +74,14 @@ ITape::ErrorCode Tape::moveBack ()
 bool Tape::rewindToBegin()
 {
     file.seekg((NUMBER_LENGTH+1), file.beg);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1/*Settings::rewindDelay()*/));
+    std::this_thread::sleep_for(std::chrono::milliseconds(Settings::rewindDelay()));
     return Tape::Success;
 }
 
 bool Tape::rewindToEnd()
 {
     file.seekg((NUMBER_LENGTH + 1) * size_, file.beg);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1/*Settings::rewindDelay()*/));
+    std::this_thread::sleep_for(std::chrono::milliseconds(Settings::rewindDelay()));
     return Tape::Success;
 }
 
@@ -92,7 +91,7 @@ ITape::ErrorCode Tape::read (unsigned int &target)
     auto ptr = file.tellg();
     getline (file, buff);
     file.seekg (ptr);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1/*Settings::readDelay()*/));
+    std::this_thread::sleep_for(std::chrono::milliseconds(Settings::readDelay()));
     target = atoi (buff.c_str());
     return Tape::Success;
 }
@@ -102,7 +101,7 @@ ITape::ErrorCode Tape::write (unsigned int value)
     auto tmpPos = file.tellp ();
     file << std::setfill('0') << std::setw(NUMBER_LENGTH) << value;
     file.seekp (tmpPos);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1/*Settings::writeDelay()*/));
+    std::this_thread::sleep_for(std::chrono::milliseconds(Settings::writeDelay()));
     return Tape::Success;
 }
 

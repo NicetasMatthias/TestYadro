@@ -9,4 +9,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (INCLUDE_PATH
     "${CMAKE_SOURCE_DIR}/includes")
 
+file(COPY "${CMAKE_SOURCE_DIR}/settings"
+     DESTINATION "${TestYadro_BINARY_DIR}/src")
+
 add_subdirectory (src)
