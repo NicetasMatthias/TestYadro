@@ -5,20 +5,35 @@
 class ITape
 {
 public:
+
+    enum ErrorCode
+    {
+        EndOfTape,
+        BeginOfTape,
+        Success,
+        EmptyCell,
+    };
+
     //! \brief Конструктор
     ITape () {};
     //! \brief Деструктор
     virtual ~ITape () {}
 
-    //! \brief Метод передвижения магнитной головки вперед
-    virtual bool moveForward () = 0;
-    //! \brief Метод передвижения магнитной головки назад
-    virtual bool moveBack () = 0;
+    //! \brief Метод передвижения магнитной головки на ячейку вперед
+    virtual ErrorCode moveForward () = 0;
+    //! \brief Метод передвижения магнитной головки на ячейку назад
+    virtual ErrorCode moveBack () = 0;
+
+    //! \brief Метод передвижения магнитной головки в начало ленты
+    virtual bool rewindToBegin () = 0;
+    //! \brief Метод передвижения магнитной головки в конец ленты
+    virtual bool rewindToEnd () = 0;
+
 
     //! \brief Чтение данных из текущей позиции
-    virtual bool read (unsigned int &target) = 0;
+    virtual ErrorCode read (unsigned int &target) = 0;
     //! \brief Запись данных в текущую позицию
-    virtual bool write (unsigned int value) = 0;
+    virtual ErrorCode write (unsigned int value) = 0;
 };
 
 #endif // ITAPE_H

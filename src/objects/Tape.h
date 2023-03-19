@@ -7,11 +7,6 @@
 #include <memory>
 #include <vector>
 
-struct Element
-{
-    unsigned int data_ {0};
-    bool used_ {false};
-};
 
 
 //! \brief Класс реализации интерфейса устройства хранения данных типа лента
@@ -19,6 +14,8 @@ struct Element
 class Tape : public ITape
 {
 public:
+
+
     using ptr_t = std::shared_ptr <Tape>;
 
     //! \brief Конструктор без параметров
@@ -32,31 +29,41 @@ public:
     //! \brief Деструктор
     ~Tape ();
 
+    //! \brief Метод возвращающий размер ленты
+    //! \return
+    int size ();
+
     //! \brief Метод передвижения магнитной головки вперед
     //! \return bool
     //!     true - удалось передвинуть головку
     //!     false - не удалось передвинуть головку
-    bool moveForward () override;
+    ErrorCode moveForward () override;
 
     //! \brief Метод передвижения магнитной головки назад
     //! \return bool
     //!     true - удалось передвинуть головку
     //!     false - не удалось передвинуть головку
-    bool moveBack () override;
+    ErrorCode moveBack () override;
+
+
+    //! \brief Метод передвижения магнитной головки в начало ленты
+    virtual bool rewindToBegin () override;
+    //! \brief Метод передвижения магнитной головки в конец ленты
+    virtual bool rewindToEnd () override;
 
     //! \brief Чтение данных из текущей позиции
     //! \param target - ссылка на переменную для записи результата
     //! \return bool
     //!     true - данные прочитаны
     //!     false - данные не прочитаны (либо не валидна вся лента, либо в текущей ячейке нет данных)
-    bool read (unsigned int &target) override;
+    ErrorCode read (unsigned int &target) override;
 
     //! \brief Запись данных в текущую позицию
     //! \param value - данные для записи в ячейку
     //! \return bool
     //!     true - данные записаны
     //!     false - данные не записаны (лента не валидна)
-    bool write (unsigned int value) override;
+    ErrorCode write (unsigned int value) override;
 
     //! \brief Метод определения валидности ленты
     //! \return bool
@@ -78,9 +85,10 @@ protected:
     //! \brief Переменная отображающая валидность ленты
     bool valid_ {false};
 
-    std::vector <Element> tapeData_;
-    std::string filename_;
-    unsigned int currPos_;
+
+    std::fstream file;
+
+    unsigned int size_;                 //!< Длина ленты
 };
 
 #endif // TAPE_H

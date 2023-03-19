@@ -1,14 +1,21 @@
 #include "Tape.h"
+#include "Settings.h"
+
+#include <chrono>
+#include <thread>
+#include <iostream>//--убрать
+#include <iomanip>
+//-- максимальное число, которое может быть записано это UINT_MAX = 4 294 967 295
+//-- для простоты навигации по файлу числа будут записываться с ведущими нулями
+#define NUMBER_LENGTH 10
 
 Tape::Tape ()
     : valid_ (false)
 {}
 
 Tape::Tape (std::string filename)
-    : filename_ (filename)
-    , currPos_ (0)
 {
-    std::ifstream file (filename_);
+    file.open (filename, std::ios_base::in | std::ios_base::out);
     if (!file.is_open ())
     {
         setValid (false);
@@ -17,23 +24,7 @@ Tape::Tape (std::string filename)
     std::string buff;
 
     getline (file, buff);
-    unsigned int size = atoi (buff.c_str ());
-    tapeData_.resize (size);
-
-    while (getline (file, buff))
-    {
-        if (buff.find ("*") == std::string::npos)
-        {
-            tapeData_.at (currPos_).data_ = atoi (buff.c_str ());
-            tapeData_.at (currPos_).used_ = true;
-        }
-        else
-        {
-            tapeData_.at (currPos_).used_ = false;
-        }
-
-    }
-
+    size_ = atoi (buff.c_str ());
     setValid (true);
 }
 
@@ -41,77 +32,78 @@ Tape::~Tape ()
 {
     if (valid ())
     {
-        std::ofstream file (filename_);
-        file << tapeData_.size () << std::endl;
-        for (const auto &iter : tapeData_)
-        {
-            if (iter.used_)
-            {
-                file << iter.data_ << std::endl;
-            }
-            else
-            {
-                file << "*" << std::endl;
-            }
-        }
         file.close ();
     }
 }
 
-bool Tape::moveForward ()
+int Tape::size ()
 {
-    if (!valid ()) return false;
+    return size_;
+}
 
-    if (currPos_ == tapeData_.size () - 1)
+
+ITape::ErrorCode Tape::moveForward ()
+{
+    file.seekg((NUMBER_LENGTH+1), file.cur);
+    if (file.tellg() == (NUMBER_LENGTH + 1) * (size_ + 1))
     {
-        //если каретка находится на последней ячейке
-        return false;
+        file.seekg(-(NUMBER_LENGTH+1), file.cur);
+        return Tape::EndOfTape;
     }
     else
     {
-        currPos_++;
-        return true;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1/*Settings::moveDelay()*/));
+        return Tape::Success;
     }
 }
 
-bool Tape::moveBack ()
+ITape::ErrorCode Tape::moveBack ()
 {
-    if (!valid ()) return false;
-
-    if (currPos_ == 0)
+    file.seekg(-(NUMBER_LENGTH+1), file.cur);
+    if (file.tellg() == 0)
     {
-        //если каретка находится на пераой ячейке
-        return false;
+        file.seekg((NUMBER_LENGTH+1), file.cur);
+        return Tape::BeginOfTape;
     }
     else
     {
-        currPos_++;
-        return true;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1/*Settings::moveDelay()*/));
+        return Tape::Success;
     }
 }
 
-bool Tape::read (unsigned int &target)
+bool Tape::rewindToBegin()
 {
-    if (!valid ()) return false;
-
-    if (tapeData_.at (currPos_).used_)
-    {
-        target = tapeData_.at (currPos_).data_;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    file.seekg((NUMBER_LENGTH+1), file.beg);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1/*Settings::rewindDelay()*/));
+    return Tape::Success;
 }
 
-bool Tape::write (unsigned int value)
+bool Tape::rewindToEnd()
 {
-    if (!valid ()) return false;
+    file.seekg((NUMBER_LENGTH + 1) * size_, file.beg);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1/*Settings::rewindDelay()*/));
+    return Tape::Success;
+}
 
-    tapeData_.at (currPos_).data_ = value;
-    tapeData_.at (currPos_).used_ = true;
-    return true;
+ITape::ErrorCode Tape::read (unsigned int &target)
+{
+    std::string buff;
+    auto ptr = file.tellg();
+    getline (file, buff);
+    file.seekg (ptr);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1/*Settings::readDelay()*/));
+    target = atoi (buff.c_str());
+    return Tape::Success;
+}
+
+ITape::ErrorCode Tape::write (unsigned int value)
+{
+    auto tmpPos = file.tellp ();
+    file << std::setfill('0') << std::setw(NUMBER_LENGTH) << value;
+    file.seekp (tmpPos);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1/*Settings::writeDelay()*/));
+    return Tape::Success;
 }
 
 bool Tape::valid ()
@@ -127,7 +119,9 @@ Tape::ptr_t Tape::makeTape(unsigned int size, std::string filename)
         return nullptr;
     }
 
-    file << size;
+    file << std::setfill('0') << std::setw(NUMBER_LENGTH) << size << "\n";
+    for (int i = 0; i < size; i ++)
+        file << "**********\n";
     file.close();
 
     return std::make_shared <Tape> (filename);
