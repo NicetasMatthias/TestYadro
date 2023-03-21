@@ -1,23 +1,14 @@
 #include "Sort.h"
 
-#include <iostream>
-
 bool Sort::doSort(Tape::ptr_t input, Tape::ptr_t output, std::vector<unsigned int> &buffer)
 {
     if (buffer.size () >= input->size ())
     {
-        //-- самый простой случай, мы можем считать все в память, отсортировать и записать ны итоговую ленту
-        //  Оценка сложности (размер ленты n):
-        //      n чтений
-        //      n записей
-        //      2n сдвигов каретки
-        std::cout << "small" << std::endl;
         return sortSmall (input, output, buffer);
     }
     else
     {
         //-- дописать описание
-        std::cout << "big" << std::endl;
         return sortBig (input, output, buffer);
     }
 }
@@ -142,7 +133,7 @@ bool Sort::mergeTapes(std::vector<Tape::ptr_t> &src, unsigned int startPos, unsi
         for (unsigned int i = 1; i < usedTapes; i ++)
         {
             if (buffer.at (i) < buffer.at (minInd))
-                    minInd = i;
+                minInd = i;
         }
         dst->write (buffer.at (minInd));
         dst->moveForward ();

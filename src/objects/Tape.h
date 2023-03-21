@@ -4,19 +4,12 @@
 #include <ITape.h>
 #include <fstream>
 #include <string>
-#include <memory>
 #include <vector>
 
-
-
 //! \brief Класс реализации интерфейса устройства хранения данных типа лента
-//!
 class Tape : public ITape
 {
 public:
-
-
-    using ptr_t = std::shared_ptr <Tape>;
 
     //! \brief Конструктор без параметров
     //!     (нельзя использовать в данной реализации, т.к. нужно имя файла)
@@ -31,7 +24,7 @@ public:
 
     //! \brief Метод возвращающий размер ленты
     //! \return
-    int size ();
+    int size () override;
 
     //! \brief Метод передвижения магнитной головки вперед
     //! \return bool
@@ -47,9 +40,10 @@ public:
 
 
     //! \brief Метод передвижения магнитной головки в начало ленты
-    virtual bool rewindToBegin () override;
+    ErrorCode rewindToBegin () override;
+
     //! \brief Метод передвижения магнитной головки в конец ленты
-    virtual bool rewindToEnd () override;
+    ErrorCode rewindToEnd () override;
 
     //! \brief Чтение данных из текущей позиции
     //! \param target - ссылка на переменную для записи результата
@@ -85,10 +79,11 @@ protected:
     //! \brief Переменная отображающая валидность ленты
     bool valid_ {false};
 
-
+    //! \brief Фойловый поток ввода-вывода
     std::fstream file;
 
-    unsigned int size_;                 //!< Длина ленты
+    //! \brief Длина ленты
+    unsigned int size_;
 };
 
 #endif // TAPE_H

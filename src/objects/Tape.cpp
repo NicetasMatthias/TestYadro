@@ -4,6 +4,7 @@
 #include <chrono>
 #include <thread>
 #include <iomanip>
+
 //-- максимальное число, которое может быть записано это UINT_MAX = 4 294 967 295
 //-- для простоты навигации по файлу числа будут записываться с ведущими нулями
 #define NUMBER_LENGTH 10
@@ -37,12 +38,18 @@ Tape::~Tape ()
 
 int Tape::size ()
 {
-    return size_;
+    if (valid_ == false)
+        return -1;
+    else
+        return size_;
 }
 
 
 ITape::ErrorCode Tape::moveForward ()
 {
+    if (valid_ == false)
+        return Tape::InvalidTape;
+
     file.seekg((NUMBER_LENGTH+1), file.cur);
     if (file.tellg() == (NUMBER_LENGTH + 1) * (size_ + 1))
     {
@@ -58,6 +65,9 @@ ITape::ErrorCode Tape::moveForward ()
 
 ITape::ErrorCode Tape::moveBack ()
 {
+    if (valid_ == false)
+        return Tape::InvalidTape;
+
     file.seekg(-(NUMBER_LENGTH+1), file.cur);
     if (file.tellg() == 0)
     {
@@ -71,15 +81,21 @@ ITape::ErrorCode Tape::moveBack ()
     }
 }
 
-bool Tape::rewindToBegin()
+ITape::ErrorCode Tape::rewindToBegin()
 {
+    if (valid_ == false)
+        return Tape::InvalidTape;
+
     file.seekg((NUMBER_LENGTH+1), file.beg);
     std::this_thread::sleep_for(std::chrono::milliseconds(Settings::rewindDelay()));
     return Tape::Success;
 }
 
-bool Tape::rewindToEnd()
+ITape::ErrorCode Tape::rewindToEnd()
 {
+    if (valid_ == false)
+        return Tape::InvalidTape;
+
     file.seekg((NUMBER_LENGTH + 1) * size_, file.beg);
     std::this_thread::sleep_for(std::chrono::milliseconds(Settings::rewindDelay()));
     return Tape::Success;
@@ -87,17 +103,30 @@ bool Tape::rewindToEnd()
 
 ITape::ErrorCode Tape::read (unsigned int &target)
 {
+    if (valid_ == false)
+        return Tape::InvalidTape;
+
     std::string buff;
     auto ptr = file.tellg();
     getline (file, buff);
     file.seekg (ptr);
     std::this_thread::sleep_for(std::chrono::milliseconds(Settings::readDelay()));
-    target = atoi (buff.c_str());
-    return Tape::Success;
+    if (buff.find ("*") == std::string::npos)
+    {
+        target = atoi (buff.c_str());
+        return Tape::Success;
+    }
+    else
+    {
+        return Tape::EmptyCell;
+    }
 }
 
 ITape::ErrorCode Tape::write (unsigned int value)
 {
+    if (valid_ == false)
+        return Tape::InvalidTape;
+
     auto tmpPos = file.tellp ();
     file << std::setfill('0') << std::setw(NUMBER_LENGTH) << value;
     file.seekp (tmpPos);
@@ -115,7 +144,7 @@ Tape::ptr_t Tape::makeTape(unsigned int size, std::string filename)
     std::ofstream file (filename);
     if (!file.is_open ())
     {
-        return nullptr;
+        return std::make_shared <Tape> ();
     }
 
     file << std::setfill('0') << std::setw(NUMBER_LENGTH) << size << "\n";

@@ -1,5 +1,5 @@
-N=10000
-RewindDelay=0
-MoveDelay=0
-ReadDelay=0
-WriteDelay=0
+N=1000
+RewindDelay=1
+MoveDelay=1
+ReadDelay=1
+WriteDelay=1
